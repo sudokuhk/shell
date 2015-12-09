@@ -1,0 +1,8 @@
+global i;
+probe kernel.function("filemap_write_and_wait_range") {
+    if (execname() != "dd") next;
+    print_backtrace();
+    println("===");
+    if (i++>2) exit();
+}
+
