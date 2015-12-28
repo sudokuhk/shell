@@ -10,17 +10,16 @@ PATHS=()
 TAR_FILE_LIST=""
 PIPE_NAME=`date +"%Y%m%d%H%M%S%N"`
 PIPE_NAME=/tmp/_package_sh_$PIPE_NAME
-echo "PIPE:"$PIPE_NAME
 
 
 function show_help()
 {
     echo "Usage: sh package.sh [-d|-t|-p|-h|-v|-z] command parameters"
-    echo "   -d date "
-    echo "   -t time "
-    echo "   -p files in path that need to be tar."
-    echo "   -o output file name, maybe like test, output filename would be test.tar.bz2"
-    echo "   -z b-bzip, g-gzip"
+    echo "   -d            date "
+    echo "   -t            time "
+    echo "   -p            files in path that need to be tar."
+    echo "   -o            output file name, maybe like test, output filename would be test.tar.bz2"
+    echo "   -z            b-bzip, g-gzip"
     echo "   -h            Show help (this screen)"
     echo "   -v            Print version information"
 }
@@ -173,6 +172,16 @@ function read_pipe()
     done
 }
 
+function create_pipe()
+{
+    local pipename=$1
+    echo "PIPE:"$pipename
+
+    mkfifo $PIPE_NAME
+    exec 6<>$PIPE_NAME
+    rm -rf $PIPE_NAME
+}
+
 function do_handle()
 {
     local output=$1;
@@ -180,6 +189,8 @@ function do_handle()
     local tim=$3;
     local paths=$4;
     local datetime="$2$3"
+
+    create_pipe $PIPE_NAME
 
     for path in ${PATHS[@]}
     do
@@ -200,14 +211,11 @@ function do_handle()
             fi
         done <&6
     done 
+    exec 6<&-
 }
 
 function main()
 {
-    mkfifo $PIPE_NAME
-    exec 6<>$PIPE_NAME
-    rm -rf $PIPE_NAME
-
     local ret=1
     parse_arg $*
 
